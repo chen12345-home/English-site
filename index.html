@@ -961,7 +961,6 @@ async function deleteStudent(password){
 }
 
 function renderStudents(){
-  students = loadStudents();
   const list = document.getElementById('student-list');
   const entries = Object.entries(students);
 
@@ -977,8 +976,8 @@ function renderStudents(){
     const row = document.createElement('div');
     row.className = 'student-row';
     row.innerHTML = `
-      <div class="info">
-        <div class="name">👤 ${name}</div>
+      <div class="info" style="flex:1;min-width:0">
+        <div class="name" id="sname-${pwd}">👤 ${name}</div>
         <div class="stats-line">
           <span class="stat">✅ ${stats.correct} נכון</span>
           <span class="stat">📝 ${stats.total} שאלות</span>
@@ -987,18 +986,91 @@ function renderStudents(){
         </div>
         <div class="progress-mini"><div class="progress-mini-fill ${pctClass}" style="width:${stats.pct}%"></div></div>
       </div>
-      <div class="password">${pwd}</div>
-      <div class="actions">
-        <button class="icon-btn" onclick="copyPassword('${pwd}', this)" title="העתק סיסמה">📋</button>
-        <button class="icon-btn danger" onclick="deleteStudent('${pwd}')" title="מחק תלמיד">🗑️</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div class="password">${pwd}</div>
+        <div class="actions">
+          <button class="icon-btn" onclick="copyPassword('${pwd}', this)" title="העתק סיסמה">📋</button>
+          <button class="icon-btn" onclick="startEditName('${pwd}')" title="שנה שם">✏️</button>
+          <button class="icon-btn" onclick="changeStudentPassword('${pwd}')" title="שנה סיסמה">🔑</button>
+          <button class="icon-btn danger" onclick="deleteStudent('${pwd}')" title="מחק תלמיד">🗑️</button>
+        </div>
       </div>
     `;
     list.appendChild(row);
   });
 }
 
+function startEditName(pwd){
+  const nameEl = document.getElementById('sname-' + pwd);
+  if(!nameEl) return;
+  const currentName = students[pwd];
+  nameEl.innerHTML = `
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <input id="edit-input-${pwd}" type="text" value="${currentName}"
+        style="padding:6px 10px;border:2px solid #4F46E5;border-radius:8px;font-size:15px;font-family:inherit;outline:none;flex:1;min-width:100px"
+        onkeypress="if(event.key==='Enter')saveStudentName('${pwd}')"
+        onkeydown="if(event.key==='Escape')cancelEditName('${pwd}','${currentName}')">
+      <button onclick="saveStudentName('${pwd}')" style="background:#4F46E5;color:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:14px">שמור</button>
+      <button onclick="cancelEditName('${pwd}','${currentName}')" style="background:#F5F5F0;border:1px solid #E5E5E0;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:14px">ביטול</button>
+    </div>`;
+  document.getElementById('edit-input-' + pwd).focus();
+}
+
+function cancelEditName(pwd, originalName){
+  const nameEl = document.getElementById('sname-' + pwd);
+  if(nameEl) nameEl.innerHTML = '👤 ' + originalName;
+}
+
+async function saveStudentName(pwd){
+  const input = document.getElementById('edit-input-' + pwd);
+  if(!input) return;
+  const newName = input.value.trim();
+  if(!newName){ alert('שם לא יכול להיות ריק'); return; }
+  if(newName === students[pwd]){ cancelEditName(pwd, newName); return; }
+
+  input.disabled = true;
+  const { error } = await db.from('students').update({ name: newName }).eq('password', pwd);
+  if(error){ alert('שגיאה בשמירת השם 😢\n' + error.message); input.disabled = false; return; }
+
+  studentsCache[pwd].name = newName;
+  students[pwd] = newName;
+  renderStudents();
+  renderPasswords();
+}
+
+async function changeStudentPassword(oldPwd){
+  const name = students[oldPwd];
+  const newPwd = prompt('סיסמה חדשה עבור ' + name + '\n(5 ספרות בלבד, השאר ריק לביטול):');
+  if(!newPwd) return;
+  if(!/^\d{5}$/.test(newPwd)){
+    alert('הסיסמה חייבת להיות בדיוק 5 ספרות');
+    return;
+  }
+  if(newPwd === ADMIN_PASSWORD || students[newPwd]){
+    alert('הסיסמה ' + newPwd + ' כבר תפוסה, נסי סיסמה אחרת');
+    return;
+  }
+
+  const s = studentsCache[oldPwd];
+  const { error: insErr } = await db.from('students').insert({
+    password: newPwd, name: s.name, correct: s.correct, total: s.total, score: s.score
+  });
+  if(insErr){ alert('שגיאה: ' + insErr.message); return; }
+
+  await db.from('students').delete().eq('password', oldPwd);
+
+  studentsCache[newPwd] = studentsCache[oldPwd];
+  students[newPwd] = students[oldPwd];
+  delete studentsCache[oldPwd];
+  delete students[oldPwd];
+
+  renderStudents();
+  renderPasswords();
+  renderStats();
+  alert('✅ הסיסמה של ' + name + ' שונתה ל: ' + newPwd);
+}
+
 function renderPasswords(){
-  students = loadStudents();
   const list = document.getElementById('passwords-list');
   const entries = Object.entries(students);
 
@@ -1035,7 +1107,6 @@ function copyPassword(pwd, btn){
 }
 
 function renderStats(){
-  students = loadStudents();
   const entries = Object.entries(students);
 
   // ריכוז סטטיסטיקות
