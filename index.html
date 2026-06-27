@@ -847,10 +847,46 @@ function logout(){
   document.getElementById('login-error').style.display = 'none';
 }
 
-function checkAutoLogin(){
-  // הסרנו את הכניסה האוטומטית - כל אחד חייב להזין סיסמה
-  // (אם תרצה להחזיר את הכניסה האוטומטית, תחזיר את הקוד הקודם)
-  return;
+async function checkAutoLogin(){
+  const saved = localStorage.getItem('wordup-current-user');
+  if(!saved) return;
+
+  // מורה - hardcoded fallback
+  if(saved === ADMIN_PASSWORD){
+    currentUserKey = saved;
+    currentUser = ADMIN_NAME;
+    isAdmin = true;
+    await showAdminPanel();
+    return;
+  }
+
+  // בדוק בטבלת מורים
+  try {
+    const { data: teacherData } = await db.from('teachers').select('name').eq('password', saved).single();
+    if(teacherData){
+      currentUserKey = saved;
+      currentUser = teacherData.name;
+      isAdmin = true;
+      await showAdminPanel();
+      return;
+    }
+  } catch(e) {}
+
+  // בדוק בטבלת תלמידים
+  try {
+    const { data: studentData } = await db.from('students').select('name').eq('password', saved).single();
+    if(!studentData){ localStorage.removeItem('wordup-current-user'); return; }
+    currentUserKey = saved;
+    currentUser = studentData.name;
+    isAdmin = false;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('user-pill').style.display = 'inline-flex';
+    document.getElementById('user-name').textContent = currentUser;
+    await loadUserStats();
+    updateScoreDisplay();
+    document.getElementById('diff-screen').style.display = 'block';
+    document.getElementById('words-today').textContent = getActiveWordCount('easy');
+  } catch(e) { localStorage.removeItem('wordup-current-user'); }
 }
 
 // ==========================================================
@@ -896,7 +932,9 @@ async function addStudent(){
   if(error){ alert('שגיאה בהוספת תלמיד 😢\n' + error.message); return; }
 
   nameInput.value = '';
-  await refreshStudentsCache();
+  // עדכן cache מקומי ישירות - מהיר ואמין יותר מ-DB round-trip
+  studentsCache[password] = { name, correct: 0, total: 0, score: 0 };
+  students[password] = name;
   renderStudents();
   renderPasswords();
   renderStats();
