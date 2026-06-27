@@ -1,0 +1,14 @@
+# מערכת הפעלה
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# עורכי קוד
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# קבצים זמניים
+*.tmp
+*.log

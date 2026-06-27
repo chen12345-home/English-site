@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ברוכים הבאים לאתר של גיא</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Heebo", Arial, sans-serif; }
+  body { background: linear-gradient(135deg, #EEF2FF 0%, #F5F5F0 100%); min-height: 100vh; padding: 20px; color: #1a1a1a; }
+  .app { max-width: 800px; margin: 0 auto; }
+
+  .header { background: #4F46E5; border-radius: 16px; padding: 22px 26px; margin-bottom: 1.5rem; text-align: center; box-shadow: 0 4px 14px rgba(79,70,229,0.2); }
+  .header h1 { color: #fff; font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .header .subtitle { color: rgba(255,255,255,0.85); font-size: 14px; }
+  .header .score-pill { display: inline-block; background: rgba(255,255,255,0.2); color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-top: 12px; margin-right: 6px; }
+  .header .user-pill { display: inline-flex; align-items: center; background: rgba(255,255,255,0.25); color: #fff; padding: 5px 6px 5px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-top: 12px; gap: 4px; }
+  .header .logout-btn { background: rgba(255,255,255,0.25); border: none; color: #fff; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0; font-family: inherit; }
+  .header .logout-btn:hover { background: rgba(255,255,255,0.4); }
+
+  /* Login screen */
+  .login-screen { background: #fff; border-radius: 16px; padding: 40px 28px 32px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); text-align: center; max-width: 460px; margin: 0 auto; }
+  .login-icon { font-size: 56px; margin-bottom: 12px; }
+  .login-screen h2 { font-size: 24px; margin-bottom: 8px; }
+  .login-hint { color: #6B6B6B; margin-bottom: 24px; font-size: 15px; line-height: 1.5; }
+  .login-input { width: 100%; padding: 14px 18px; font-size: 28px; border: 2px solid #E5E5E0; border-radius: 10px; outline: none; font-family: inherit; transition: border-color 0.15s; text-align: center; letter-spacing: 0.4em; margin-bottom: 12px; font-weight: 600; }
+  .login-input:focus { border-color: #4F46E5; }
+  .login-btn { width: 100%; padding: 14px; font-size: 16px; font-weight: 700; color: #fff; background: #4F46E5; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .login-btn:hover { background: #4338CA; transform: translateY(-1px); }
+  .login-error { background: #FEE2E2; color: #DC2626; padding: 10px; border-radius: 8px; margin-top: 12px; font-size: 14px; font-weight: 500; animation: shake 0.4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  /* Welcome screen */
+  .welcome-screen { background: #fff; border-radius: 16px; padding: 50px 30px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); max-width: 460px; margin: 0 auto; animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .welcome-emoji { font-size: 80px; margin-bottom: 10px; }
+  .welcome-title { font-size: 22px; color: #6B6B6B; font-weight: 500; }
+  .welcome-name { font-size: 42px; font-weight: 700; color: #4F46E5; margin: 6px 0 14px; }
+  .welcome-sub { color: #6B6B6B; margin-bottom: 24px; font-size: 16px; }
+
+  /* Difficulty selection */
+  .difficulty-screen { background: #fff; border-radius: 16px; padding: 30px 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .difficulty-screen h2 { font-size: 22px; color: #1a1a1a; margin-bottom: 8px; text-align: center; }
+  .difficulty-screen .intro { color: #6B6B6B; text-align: center; margin-bottom: 24px; font-size: 15px; }
+  .daily-info { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 10px; padding: 10px 14px; font-size: 13px; color: #92400E; text-align: center; margin-bottom: 16px; }
+  .diff-grid { display: flex; flex-direction: column; gap: 12px; }
+  .diff-btn { background: #fff; border: 2px solid #E5E5E0; border-radius: 12px; padding: 18px 20px; cursor: pointer; text-align: right; display: flex; justify-content: space-between; align-items: center; font-family: inherit; transition: all 0.15s; }
+  .diff-btn:hover { transform: translateY(-2px); border-color: var(--c, #4F46E5); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .diff-btn .name { font-size: 18px; font-weight: 700; color: var(--c, #4F46E5); }
+  .diff-btn .desc { font-size: 13px; color: #6B6B6B; margin-top: 3px; }
+  .diff-btn .emoji { font-size: 32px; }
+  .diff-btn[data-level="easy"] { --c: #10B981; }
+  .diff-btn[data-level="medium"] { --c: #3B82F6; }
+  .diff-btn[data-level="hard"] { --c: #F59E0B; }
+  .diff-btn[data-level="veryhard"] { --c: #EF4444; }
+  .diff-btn[data-level="impossible"] { --c: #7C2D12; background: linear-gradient(135deg, #1F2937 0%, #4B5563 100%); border-color: #1F2937; }
+  .diff-btn[data-level="impossible"] .name { color: #fff; }
+  .diff-btn[data-level="impossible"] .desc { color: #D1D5DB; }
+
+  /* Game screen */
+  .info-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #E5E5E0; font-size: 14px; flex-wrap: wrap; gap: 8px; }
+  .info-bar .level-badge { color: #fff; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 13px; }
+  .info-bar .stats { color: #6B6B6B; font-weight: 500; }
+  .change-level { background: transparent; border: none; color: #4F46E5; cursor: pointer; font-size: 13px; text-decoration: underline; font-family: inherit; }
+
+  .word-card { background: #fff; border-radius: 16px; padding: 36px 24px; text-align: center; margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .word-prompt { font-size: 14px; color: #6B6B6B; margin-bottom: 8px; }
+  .english-word { font-size: 50px; font-weight: 700; color: #4F46E5; margin-bottom: 6px; word-break: break-word; }
+  .pronunciation { font-size: 16px; color: #6B6B6B; font-style: italic; margin-bottom: 16px; }
+  .speak-btn { background: #fff; border: 2px solid #4F46E5; border-radius: 50%; width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 22px; transition: all 0.15s; }
+  .speak-btn:hover { background: #EEF2FF; transform: scale(1.05); }
+
+  .answer-area { background: #fff; border-radius: 14px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .answer-label { font-size: 15px; color: #4a4a4a; margin-bottom: 10px; font-weight: 500; }
+  .answer-input { width: 100%; padding: 14px 18px; font-size: 20px; border: 2px solid #E5E5E0; border-radius: 10px; outline: none; font-family: inherit; transition: border-color 0.15s; direction: rtl; }
+  .answer-input:focus { border-color: #4F46E5; }
+  .btn-row-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .submit-btn { flex: 2; padding: 14px; font-size: 16px; font-weight: 700; color: #fff; background: #4F46E5; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .submit-btn:hover { background: #4338CA; transform: translateY(-1px); }
+  .dontknow-btn { flex: 1; padding: 14px 12px; font-size: 15px; font-weight: 600; color: #6B6B6B; background: #fff; border: 2px solid #E5E5E0; border-radius: 10px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .dontknow-btn:hover { background: #F5F5F0; border-color: #C7C7C0; color: #1a1a1a; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.show { display: flex; animation: fadeIn 0.25s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal { background: #fff; border-radius: 20px; padding: 36px 28px; text-align: center; max-width: 420px; width: 100%; position: relative; animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .modal-close { position: absolute; top: 12px; left: 12px; background: #F5F5F0; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #6B6B6B; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: all 0.15s; }
+  .modal-close:hover { background: #E5E5E0; color: #1a1a1a; }
+  .modal .big-emoji { font-size: 80px; margin-bottom: 12px; line-height: 1; }
+  .modal .title { font-size: 30px; font-weight: 700; margin-bottom: 10px; }
+  .modal .message { font-size: 17px; color: #4a4a4a; margin-bottom: 8px; line-height: 1.5; }
+  .modal .correct-answer { background: #F5F5F0; padding: 12px 18px; border-radius: 10px; margin-top: 14px; font-size: 16px; }
+  .modal .correct-answer .label { color: #6B6B6B; font-size: 13px; margin-bottom: 4px; }
+  .modal .correct-answer .word { font-weight: 700; color: #1a1a1a; font-size: 20px; }
+  .modal.correct .title { color: #059669; }
+  .modal.wrong .title { color: #DC2626; }
+  .modal.neutral .title { color: #4F46E5; }
+  .points-earned { display: inline-block; background: #FEF3C7; color: #92400E; padding: 6px 14px; border-radius: 20px; font-weight: 700; margin-top: 14px; font-size: 14px; }
+
+  /* ========== ADMIN PANEL ========== */
+  .admin-panel { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+  .admin-panel h2 { font-size: 22px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .admin-panel .subtitle { color: #6B6B6B; font-size: 14px; margin-bottom: 20px; }
+
+  .admin-tabs { display: flex; gap: 6px; margin-bottom: 20px; background: #F5F5F0; padding: 6px; border-radius: 12px; }
+  .admin-tab { flex: 1; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: transparent; color: #6B6B6B; transition: all 0.15s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .admin-tab.active { background: #4F46E5; color: #fff; }
+
+  .admin-section { display: none; }
+  .admin-section.active { display: block; }
+
+  .add-student-form { background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .add-student-form h3 { font-size: 16px; margin-bottom: 12px; color: #3730A3; }
+  .add-student-row { display: flex; gap: 8px; }
+  .add-student-input { flex: 1; padding: 11px 14px; font-size: 15px; border: 1.5px solid #C7D2FE; border-radius: 8px; outline: none; font-family: inherit; }
+  .add-student-input:focus { border-color: #4F46E5; }
+  .add-student-btn { padding: 11px 20px; background: #4F46E5; color: #fff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 15px; }
+  .add-student-btn:hover { background: #4338CA; }
+
+  .student-list { display: flex; flex-direction: column; gap: 8px; }
+  .student-row { background: #F9FAFB; border: 1px solid #E5E5E0; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .student-row .info { flex: 1; min-width: 120px; }
+  .student-row .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+  .student-row .stats-line { font-size: 13px; color: #6B6B6B; display: flex; gap: 12px; flex-wrap: wrap; }
+  .student-row .stats-line .stat { display: inline-flex; align-items: center; gap: 4px; }
+  .student-row .password { background: #1F2937; color: #FBBF24; font-family: ui-monospace, "Courier New", monospace; padding: 6px 14px; border-radius: 8px; font-size: 17px; font-weight: 700; letter-spacing: 0.2em; }
+  .student-row .actions { display: flex; gap: 6px; }
+  .icon-btn { background: #fff; border: 1px solid #E5E5E0; border-radius: 8px; width: 34px; height: 34px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-family: inherit; }
+  .icon-btn:hover { background: #F5F5F0; transform: translateY(-1px); }
+  .icon-btn.danger:hover { background: #FEE2E2; border-color: #FCA5A5; }
+
+  .progress-mini { background: #E5E5E0; border-radius: 4px; height: 6px; margin-top: 6px; overflow: hidden; max-width: 200px; }
+  .progress-mini-fill { height: 100%; background: #10B981; border-radius: 4px; }
+  .progress-mini-fill.medium { background: #F59E0B; }
+  .progress-mini-fill.low { background: #EF4444; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: #6B6B6B; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 8px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .stat-card { background: #F9FAFB; border: 1px solid #E5E5E0; border-radius: 10px; padding: 14px; text-align: center; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: #4F46E5; }
+  .stat-card .label { font-size: 12px; color: #6B6B6B; margin-top: 4px; }
+
+  .words-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .words-table th { background: #F9FAFB; padding: 10px; text-align: right; font-weight: 600; border-bottom: 1px solid #E5E5E0; font-size: 13px; color: #6B6B6B; }
+  .words-table td { padding: 10px; border-bottom: 1px solid #F5F5F0; }
+  .words-table tr:last-child td { border-bottom: none; }
+
+  .password-card { background: #fff; border: 2px solid #E5E5E0; border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+  .password-card .name { font-size: 17px; font-weight: 600; }
+  .password-card .code { background: #1F2937; color: #FBBF24; font-family: ui-monospace, "Courier New", monospace; padding: 8px 18px; border-radius: 8px; font-size: 20px; font-weight: 700; letter-spacing: 0.2em; }
+  .copy-btn { background: transparent; border: 1px solid #E5E5E0; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-family: inherit; }
+  .copy-btn:hover { background: #F5F5F0; }
+  .copy-btn.copied { background: #DCFCE7; border-color: #10B981; color: #059669; }
+
+  @media (max-width: 500px) {
+    .english-word { font-size: 38px; }
+    .header h1 { font-size: 22px; }
+    .modal .big-emoji { font-size: 64px; }
+    .modal .title { font-size: 24px; }
+    .student-row { flex-direction: column; align-items: stretch; }
+    .student-row .actions { justify-content: flex-end; }
+    .admin-tab { font-size: 12px; padding: 10px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>🎉 ברוכים הבאים לאתר של גיא</h1>
+    <div class="subtitle">לימוד אנגלית בכיף 📚</div>
+    <div class="user-pill" id="user-pill" style="display:none">👤 <span id="user-name"></span> <button class="logout-btn" onclick="logout()" title="התנתק">🚪</button></div>
+    <div class="score-pill" id="score-pill" style="display:none">⭐ <span id="score">0</span> נקודות</div>
+  </div>
+
+  <!-- Login screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-icon">🔐</div>
+    <h2>תרשום את הסיסמה</h2>
+    <p class="login-hint">היי! כל ילד קיבל סיסמה אישית.<br>תזין 5 ספרות כדי להיכנס.</p>
+    <input type="tel" class="login-input" id="password-input" placeholder="• • • • •" autocomplete="off" inputmode="numeric" pattern="[0-9]*" maxlength="5" onkeypress="if(event.key==='Enter')doLogin()" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    <button class="login-btn" onclick="doLogin()">כניסה ←</button>
+    <div class="login-error" id="login-error" style="display:none">סיסמה לא נכונה, נסה שוב 🤔</div>
+  </div>
+
+  <!-- Welcome screen -->
+  <div class="welcome-screen" id="welcome-screen" style="display:none">
+    <div class="welcome-emoji">🎉</div>
+    <div class="welcome-title">ברוכים הבאים</div>
+    <div class="welcome-name" id="welcome-name">גיא</div>
+    <div class="welcome-sub">בוא נתחיל ללמוד אנגלית!</div>
+    <button class="login-btn" onclick="goToDifficulty()">בוא נתחיל ←</button>
+  </div>
+
+  <!-- Difficulty selection -->
+  <div class="difficulty-screen" id="diff-screen" style="display:none">
+    <h2>🎯 בחר רמת קושי</h2>
+    <p class="intro">המילים יהיו מותאמות לרמה שתבחר</p>
+    <div class="daily-info" id="daily-info">📅 היום זמינות <strong><span id="words-today">20</span></strong> מילים בכל רמה. מחר יתווספו 5 חדשות!</div>
+    <div class="diff-grid">
+      <button class="diff-btn" data-level="easy" onclick="startGame('easy')">
+        <div><div class="name">קל</div><div class="desc">מילים בסיסיות שכולם מכירים</div></div>
+        <div class="emoji">😊</div>
+      </button>
+      <button class="diff-btn" data-level="medium" onclick="startGame('medium')">
+        <div><div class="name">בינוני</div><div class="desc">מילים שנלמדות בכיתה ו'</div></div>
+        <div class="emoji">🙂</div>
+      </button>
+      <button class="diff-btn" data-level="hard" onclick="startGame('hard')">
+        <div><div class="name">קשה</div><div class="desc">מילים לרמה גבוהה יותר</div></div>
+        <div class="emoji">🤔</div>
+      </button>
+      <button class="diff-btn" data-level="veryhard" onclick="startGame('veryhard')">
+        <div><div class="name">קשה מאוד</div><div class="desc">לאלופים בלבד!</div></div>
+        <div class="emoji">😤</div>
+      </button>
+      <button class="diff-btn" data-level="impossible" onclick="startGame('impossible')">
+        <div><div class="name">בלתי אפשרי 💀</div><div class="desc">מילים שגם מבוגרים לא יודעים</div></div>
+        <div class="emoji">🔥</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <div class="game-screen" id="game-screen" style="display:none">
+    <div class="info-bar">
+      <span class="level-badge" id="level-badge">קל</span>
+      <span class="stats"><span id="correct-count">0</span> נכון / <span id="total-count">0</span> שאלות</span>
+      <button class="change-level" onclick="backToMenu()">החלף רמה</button>
+    </div>
+
+    <div class="word-card">
+      <div class="word-prompt">איך אומרים בעברית?</div>
+      <div class="english-word" id="eng-word">cat</div>
+      <div class="pronunciation" id="pronun">/kæt/</div>
+      <button class="speak-btn" onclick="speak()" aria-label="האזן">🔊</button>
+    </div>
+
+    <div class="answer-area">
+      <div class="answer-label">כתוב את התרגום בעברית:</div>
+      <input type="text" class="answer-input" id="answer-input" placeholder="התשובה שלך..." autocomplete="off" onkeypress="if(event.key==='Enter')checkAnswer()">
+      <div class="btn-row-actions">
+        <button class="submit-btn" onclick="checkAnswer()" id="submit-btn">בדוק תשובה ✓</button>
+        <button class="dontknow-btn" onclick="dontKnow()" id="dontknow-btn">🤷 לא יודע</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================ -->
+  <!-- ADMIN PANEL                  -->
+  <!-- ============================ -->
+  <div class="admin-panel" id="admin-panel" style="display:none">
+    <h2>👩‍🏫 פאנל מורה</h2>
+    <p class="subtitle">ניהול תלמידים, סיסמאות וצפייה בהתקדמות</p>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="showAdminTab('students', this)">👥 שמות תלמידים</button>
+      <button class="admin-tab" onclick="showAdminTab('passwords', this)">🔐 סיסמאות</button>
+      <button class="admin-tab" onclick="showAdminTab('stats', this)">📊 סטטיסטיקה</button>
+    </div>
+
+    <!-- Students tab -->
+    <div class="admin-section active" id="admin-students">
+      <div class="add-student-form">
+        <h3>➕ הוסף תלמיד חדש</h3>
+        <div class="add-student-row">
+          <input type="text" class="add-student-input" id="new-student-name" placeholder="שם התלמיד..." onkeypress="if(event.key==='Enter')addStudent()">
+          <button class="add-student-btn" onclick="addStudent()">צור סיסמה</button>
+        </div>
+      </div>
+      <div class="student-list" id="student-list"></div>
+    </div>
+
+    <!-- Passwords tab -->
+    <div class="admin-section" id="admin-passwords">
+      <p style="color:#6B6B6B;font-size:14px;margin-bottom:14px;">📋 לחץ על "העתק" כדי להעתיק את הסיסמה ולשלוח לתלמיד</p>
+      <div id="passwords-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- Stats tab -->
+    <div class="admin-section" id="admin-stats">
+      <div class="stats-grid" id="overview-stats"></div>
+      <h3 style="font-size:16px;margin-bottom:12px;">📊 פירוט לפי תלמיד</h3>
+      <div style="overflow-x:auto;">
+        <table class="words-table" id="stats-table">
+          <thead>
+            <tr>
+              <th>תלמיד</th>
+              <th>נכון</th>
+              <th>סה״כ</th>
+              <th>אחוז הצלחה</th>
+              <th>נקודות</th>
+            </tr>
+          </thead>
+          <tbody id="stats-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="big-emoji" id="modal-emoji">🎉</div>
+    <div class="title" id="modal-title">כל הכבוד!</div>
+    <div class="message" id="modal-message">תשובה נכונה!</div>
+    <div class="correct-answer" id="modal-correct" style="display:none">
+      <div class="label">התרגום הנכון הוא:</div>
+      <div class="word" id="modal-correct-word"></div>
+    </div>
+    <div class="points-earned" id="points-earned" style="display:none">+10 נקודות ⭐</div>
+  </div>
+</div>
+
+<script>
+// ==========================================================
+// הגדרות כלליות
+// ==========================================================
+const ADMIN_PASSWORD = "99999";  // הסיסמה של המורה
+const ADMIN_NAME = "מורה";
+const SITE_START_DATE = "2026-06-26"; // תאריך התחלת המערכת - אל תשנה!
+const INITIAL_WORDS_PER_LEVEL = 20;
+const DAILY_NEW_WORDS = 5;
+
+// ==========================================================
+// רשימת תלמידים ברירת מחדל (נטענת רק בפעם הראשונה)
+// אחר כך נשמרת ב-localStorage והמורה יכולה לערוך
+// ==========================================================
+const DEFAULT_STUDENTS = {
+  "10001": "גיא"
+};
+
+// טעינת תלמידים מ-localStorage או יצירת ברירת מחדל
+function loadStudents(){
+  const saved = localStorage.getItem('wordup-students');
+  if(saved){
+    try { return JSON.parse(saved); } catch(e) { return {...DEFAULT_STUDENTS}; }
+  }
+  localStorage.setItem('wordup-students', JSON.stringify(DEFAULT_STUDENTS));
+  return {...DEFAULT_STUDENTS};
+}
+
+function saveStudents(students){
+  localStorage.setItem('wordup-students', JSON.stringify(students));
+}
+
+let students = loadStudents();
+
+// ==========================================================
+// מאגר מילים - כל רמה עם הרבה מילים
+// מספר המילים הזמינות גדל בכל יום
+// ==========================================================
+const wordBank = {
+  easy: [
+    {en:"cat", pron:"/kæt/", he:"חתול|חתולה"},
+    {en:"dog", pron:"/dɒɡ/", he:"כלב|כלבה"},
+    {en:"mom", pron:"/mɒm/", he:"אמא|אימא|אם"},
+    {en:"dad", pron:"/dæd/", he:"אבא|אב"},
+    {en:"boy", pron:"/bɔɪ/", he:"ילד|בן"},
+    {en:"girl", pron:"/ɡɜːl/", he:"ילדה|בת"},
+    {en:"red", pron:"/red/", he:"אדום|אדומה"},
+    {en:"blue", pron:"/bluː/", he:"כחול|כחולה"},
+    {en:"green", pron:"/ɡriːn/", he:"ירוק|ירוקה"},
+    {en:"yellow", pron:"/ˈjel.oʊ/", he:"צהוב|צהובה"},
+    {en:"black", pron:"/blæk/", he:"שחור|שחורה"},
+    {en:"white", pron:"/waɪt/", he:"לבן|לבנה"},
+    {en:"big", pron:"/bɪɡ/", he:"גדול|גדולה"},
+    {en:"small", pron:"/smɔːl/", he:"קטן|קטנה"},
+    {en:"hot", pron:"/hɒt/", he:"חם|חמה"},
+    {en:"cold", pron:"/koʊld/", he:"קר|קרה"},
+    {en:"happy", pron:"/ˈhæp.i/", he:"שמח|שמחה|מאושר|מאושרת"},
+    {en:"sad", pron:"/sæd/", he:"עצוב|עצובה"},
+    {en:"eat", pron:"/iːt/", he:"לאכול|אוכל"},
+    {en:"drink", pron:"/drɪŋk/", he:"לשתות|שותה"},
+    {en:"run", pron:"/rʌn/", he:"לרוץ|רץ|רצה"},
+    {en:"sleep", pron:"/sliːp/", he:"לישון|ישן|שינה"},
+    {en:"play", pron:"/pleɪ/", he:"לשחק|משחק|משחקת"},
+    {en:"see", pron:"/siː/", he:"לראות|רואה"},
+    {en:"water", pron:"/ˈwɔː.tər/", he:"מים"},
+    {en:"bread", pron:"/bred/", he:"לחם"},
+    {en:"milk", pron:"/mɪlk/", he:"חלב"},
+    {en:"apple", pron:"/ˈæp.əl/", he:"תפוח|תפוחים"},
+    {en:"book", pron:"/bʊk/", he:"ספר|ספרים"},
+    {en:"house", pron:"/haʊs/", he:"בית|בתים"},
+    {en:"sun", pron:"/sʌn/", he:"שמש"},
+    {en:"moon", pron:"/muːn/", he:"ירח|לבנה"},
+    {en:"star", pron:"/stɑːr/", he:"כוכב"},
+    {en:"sky", pron:"/skaɪ/", he:"שמיים"},
+    {en:"tree", pron:"/triː/", he:"עץ"},
+    {en:"flower", pron:"/ˈflaʊ.ər/", he:"פרח"},
+    {en:"car", pron:"/kɑːr/", he:"מכונית|אוטו|רכב"},
+    {en:"bike", pron:"/baɪk/", he:"אופניים"},
+    {en:"ball", pron:"/bɔːl/", he:"כדור"},
+    {en:"door", pron:"/dɔːr/", he:"דלת"},
+    {en:"window", pron:"/ˈwɪn.doʊ/", he:"חלון"},
+    {en:"chair", pron:"/tʃer/", he:"כיסא"},
+    {en:"table", pron:"/ˈteɪ.bəl/", he:"שולחן"},
+    {en:"hand", pron:"/hænd/", he:"יד"},
+    {en:"eye", pron:"/aɪ/", he:"עין"},
+    {en:"head", pron:"/hed/", he:"ראש"},
+    {en:"foot", pron:"/fʊt/", he:"רגל|כף רגל"},
+    {en:"go", pron:"/ɡoʊ/", he:"ללכת|הולך"},
+    {en:"come", pron:"/kʌm/", he:"לבוא|בא|באה"},
+    {en:"yes", pron:"/jes/", he:"כן"},
+    {en:"no", pron:"/noʊ/", he:"לא"},
+    {en:"good", pron:"/ɡʊd/", he:"טוב|טובה"},
+    {en:"bad", pron:"/bæd/", he:"רע|רעה"},
+    {en:"new", pron:"/nuː/", he:"חדש|חדשה"},
+    {en:"old", pron:"/oʊld/", he:"זקן|ישן|זקנה|ישנה"},
+    {en:"day", pron:"/deɪ/", he:"יום"},
+    {en:"night", pron:"/naɪt/", he:"לילה"},
+    {en:"friend", pron:"/frend/", he:"חבר|חברה"},
+    {en:"school", pron:"/skuːl/", he:"בית ספר"},
+    {en:"family", pron:"/ˈfæm.əl.i/", he:"משפחה"},
+  ],
+  medium: [
+    {en:"afternoon", pron:"/ˌɑːf.təˈnuːn/", he:"אחר הצהריים|אחה״צ"},
+    {en:"breakfast", pron:"/ˈbrek.fəst/", he:"ארוחת בוקר"},
+    {en:"birthday", pron:"/ˈbɜːθ.deɪ/", he:"יום הולדת"},
+    {en:"brother", pron:"/ˈbrʌð.ər/", he:"אח"},
+    {en:"sister", pron:"/ˈsɪs.tər/", he:"אחות"},
+    {en:"afraid", pron:"/əˈfreɪd/", he:"מפחד|מפחדת|פוחד|פוחדת"},
+    {en:"angry", pron:"/ˈæŋ.ɡri/", he:"כועס|כועסת|עצבני|עצבנית"},
+    {en:"beautiful", pron:"/ˈbjuː.tɪ.fəl/", he:"יפה|יפהפה|יפהפיה"},
+    {en:"bored", pron:"/bɔːrd/", he:"משועמם|משועממת|משעמם"},
+    {en:"busy", pron:"/ˈbɪz.i/", he:"עסוק|עסוקה"},
+    {en:"begin", pron:"/bɪˈɡɪn/", he:"להתחיל|מתחיל|מתחילה"},
+    {en:"bring", pron:"/brɪŋ/", he:"להביא|מביא|מביאה"},
+    {en:"build", pron:"/bɪld/", he:"לבנות|בונה"},
+    {en:"answer", pron:"/ˈɑːn.sər/", he:"תשובה|לענות|עונה"},
+    {en:"ask", pron:"/ɑːsk/", he:"לשאול|שואל|שואלת"},
+    {en:"believe", pron:"/bɪˈliːv/", he:"להאמין|מאמין|מאמינה"},
+    {en:"break", pron:"/breɪk/", he:"לשבור|הפסקה|שובר|שוברת"},
+    {en:"alphabet", pron:"/ˈæl.fə.bet/", he:"אלפבית|א״ב"},
+    {en:"again", pron:"/əˈɡen/", he:"שוב|שנית|עוד פעם"},
+    {en:"autumn", pron:"/ˈɔː.təm/", he:"סתיו"},
+    {en:"morning", pron:"/ˈmɔːr.nɪŋ/", he:"בוקר"},
+    {en:"evening", pron:"/ˈiːv.nɪŋ/", he:"ערב"},
+    {en:"summer", pron:"/ˈsʌm.ər/", he:"קיץ"},
+    {en:"winter", pron:"/ˈwɪn.tər/", he:"חורף"},
+    {en:"spring", pron:"/sprɪŋ/", he:"אביב|קפיץ"},
+    {en:"weather", pron:"/ˈweð.ər/", he:"מזג אוויר|מזג האוויר"},
+    {en:"rain", pron:"/reɪn/", he:"גשם|לרדת גשם"},
+    {en:"snow", pron:"/snoʊ/", he:"שלג"},
+    {en:"wind", pron:"/wɪnd/", he:"רוח"},
+    {en:"cloud", pron:"/klaʊd/", he:"ענן"},
+    {en:"between", pron:"/bɪˈtwiːn/", he:"בין"},
+    {en:"behind", pron:"/bɪˈhaɪnd/", he:"מאחורי|מאחור"},
+    {en:"before", pron:"/bɪˈfɔːr/", he:"לפני"},
+    {en:"after", pron:"/ˈæf.tər/", he:"אחרי|לאחר"},
+    {en:"because", pron:"/bɪˈkɔːz/", he:"בגלל|כי"},
+    {en:"always", pron:"/ˈɔːl.weɪz/", he:"תמיד"},
+    {en:"never", pron:"/ˈnev.ər/", he:"אף פעם לא|לעולם לא"},
+    {en:"sometimes", pron:"/ˈsʌm.taɪmz/", he:"לפעמים"},
+    {en:"often", pron:"/ˈɔː.fən/", he:"לעיתים קרובות|הרבה פעמים"},
+    {en:"better", pron:"/ˈbet.ər/", he:"יותר טוב|טוב יותר|מעולה"},
+    {en:"teacher", pron:"/ˈtiː.tʃər/", he:"מורה"},
+    {en:"student", pron:"/ˈstuː.dənt/", he:"תלמיד|תלמידה|סטודנט"},
+    {en:"lesson", pron:"/ˈles.ən/", he:"שיעור"},
+    {en:"homework", pron:"/ˈhoʊm.wɜːk/", he:"שיעורי בית"},
+    {en:"exam", pron:"/ɪɡˈzæm/", he:"מבחן|בחינה"},
+    {en:"learn", pron:"/lɜːrn/", he:"ללמוד|לומד|לומדת"},
+    {en:"teach", pron:"/tiːtʃ/", he:"ללמד|מלמד"},
+    {en:"study", pron:"/ˈstʌd.i/", he:"ללמוד|לימוד"},
+    {en:"write", pron:"/raɪt/", he:"לכתוב|כותב|כותבת"},
+    {en:"read", pron:"/riːd/", he:"לקרוא|קורא|קוראת"},
+    {en:"speak", pron:"/spiːk/", he:"לדבר|מדבר|מדברת"},
+    {en:"listen", pron:"/ˈlɪs.ən/", he:"להקשיב|מקשיב|מקשיבה"},
+    {en:"understand", pron:"/ˌʌn.dərˈstænd/", he:"להבין|מבין|מבינה"},
+    {en:"remember", pron:"/rɪˈmem.bər/", he:"לזכור|זוכר|זוכרת"},
+    {en:"forget", pron:"/fərˈɡet/", he:"לשכוח|שוכח|שוכחת"},
+    {en:"hungry", pron:"/ˈhʌŋ.ɡri/", he:"רעב|רעבה"},
+    {en:"thirsty", pron:"/ˈθɜːr.sti/", he:"צמא|צמאה"},
+    {en:"tired", pron:"/ˈtaɪərd/", he:"עייף|עייפה"},
+    {en:"smart", pron:"/smɑːrt/", he:"חכם|חכמה|פיקח"},
+    {en:"strong", pron:"/strɒŋ/", he:"חזק|חזקה"},
+  ],
+  hard: [
+    {en:"curious", pron:"/ˈkjʊər.i.əs/", he:"סקרן|סקרנית|מסוקרן"},
+    {en:"generous", pron:"/ˈdʒen.ər.əs/", he:"נדיב|נדיבה"},
+    {en:"brilliant", pron:"/ˈbrɪl.i.ənt/", he:"מבריק|מבריקה|נפלא"},
+    {en:"adventure", pron:"/ədˈven.tʃər/", he:"הרפתקה|הרפתקאות"},
+    {en:"discover", pron:"/dɪˈskʌv.ər/", he:"לגלות|מגלה"},
+    {en:"challenge", pron:"/ˈtʃæl.ɪndʒ/", he:"אתגר|לאתגר"},
+    {en:"imagine", pron:"/ɪˈmædʒ.ɪn/", he:"לדמיין|מדמיין|מדמיינת"},
+    {en:"experience", pron:"/ɪkˈspɪər.i.əns/", he:"חוויה|ניסיון"},
+    {en:"important", pron:"/ɪmˈpɔːr.tənt/", he:"חשוב|חשובה"},
+    {en:"different", pron:"/ˈdɪf.ər.ənt/", he:"שונה|אחר"},
+    {en:"dangerous", pron:"/ˈdeɪn.dʒər.əs/", he:"מסוכן|מסוכנת"},
+    {en:"delicious", pron:"/dɪˈlɪʃ.əs/", he:"טעים|טעימה|טעים מאוד"},
+    {en:"famous", pron:"/ˈfeɪ.məs/", he:"מפורסם|מפורסמת"},
+    {en:"healthy", pron:"/ˈhel.θi/", he:"בריא|בריאה"},
+    {en:"strange", pron:"/streɪndʒ/", he:"מוזר|מוזרה|מפתיע"},
+    {en:"unique", pron:"/juːˈniːk/", he:"ייחודי|ייחודית|מיוחד"},
+    {en:"powerful", pron:"/ˈpaʊ.ər.fəl/", he:"חזק|חזקה|רב עוצמה"},
+    {en:"successful", pron:"/səkˈses.fəl/", he:"מצליח|מצליחה|מוצלח"},
+    {en:"environment", pron:"/ɪnˈvaɪ.rən.mənt/", he:"סביבה"},
+    {en:"government", pron:"/ˈɡʌv.ərn.mənt/", he:"ממשלה"},
+    {en:"opportunity", pron:"/ˌɑː.pərˈtuː.nə.ti/", he:"הזדמנות"},
+    {en:"knowledge", pron:"/ˈnɑː.lɪdʒ/", he:"ידע"},
+    {en:"decision", pron:"/dɪˈsɪʒ.ən/", he:"החלטה"},
+    {en:"information", pron:"/ˌɪn.fərˈmeɪ.ʃən/", he:"מידע|אינפורמציה"},
+    {en:"future", pron:"/ˈfjuː.tʃər/", he:"עתיד"},
+    {en:"language", pron:"/ˈlæŋ.ɡwɪdʒ/", he:"שפה"},
+    {en:"explain", pron:"/ɪkˈspleɪn/", he:"להסביר|מסביר|מסבירה"},
+    {en:"interesting", pron:"/ˈɪn.trəs.tɪŋ/", he:"מעניין|מעניינת"},
+    {en:"difficult", pron:"/ˈdɪf.ɪ.kəlt/", he:"קשה|מסובך|מסובכת"},
+    {en:"comfortable", pron:"/ˈkʌm.fər.tə.bəl/", he:"נוח|נוחה|בנוחות"},
+    {en:"expensive", pron:"/ɪkˈspen.sɪv/", he:"יקר|יקרה"},
+    {en:"cheap", pron:"/tʃiːp/", he:"זול|זולה"},
+    {en:"beautiful", pron:"/ˈbjuː.tɪ.fəl/", he:"יפהפה|יפה|מקסים"},
+    {en:"creative", pron:"/kriˈeɪ.tɪv/", he:"יצירתי|יצירתית"},
+    {en:"intelligent", pron:"/ɪnˈtel.ɪ.dʒənt/", he:"אינטליגנטי|חכם|נבון"},
+    {en:"protect", pron:"/prəˈtekt/", he:"להגן|מגן|מגינה"},
+    {en:"respect", pron:"/rɪˈspekt/", he:"לכבד|כבוד"},
+    {en:"freedom", pron:"/ˈfriː.dəm/", he:"חופש|חירות"},
+    {en:"culture", pron:"/ˈkʌl.tʃər/", he:"תרבות"},
+    {en:"society", pron:"/səˈsaɪ.ə.ti/", he:"חברה"},
+    {en:"history", pron:"/ˈhɪs.tər.i/", he:"היסטוריה|תולדות"},
+    {en:"future", pron:"/ˈfjuː.tʃər/", he:"עתיד"},
+    {en:"science", pron:"/ˈsaɪ.əns/", he:"מדע"},
+    {en:"technology", pron:"/tekˈnɑː.lə.dʒi/", he:"טכנולוגיה"},
+    {en:"computer", pron:"/kəmˈpjuː.tər/", he:"מחשב"},
+    {en:"internet", pron:"/ˈɪn.tər.net/", he:"אינטרנט"},
+    {en:"continue", pron:"/kənˈtɪn.juː/", he:"להמשיך|ממשיך|ממשיכה"},
+    {en:"develop", pron:"/dɪˈvel.əp/", he:"לפתח|מפתח|התפתח"},
+    {en:"improve", pron:"/ɪmˈpruːv/", he:"לשפר|משפר|משתפר"},
+    {en:"compare", pron:"/kəmˈper/", he:"להשוות|משווה|השוואה"},
+    {en:"describe", pron:"/dɪˈskraɪb/", he:"לתאר|מתאר|תיאור"},
+    {en:"prepare", pron:"/prɪˈper/", he:"להכין|מכין|מכינה"},
+    {en:"recognize", pron:"/ˈrek.əɡ.naɪz/", he:"לזהות|לפנות בו|מזהה"},
+    {en:"suggest", pron:"/səˈdʒest/", he:"להציע|הצעה|מציע"},
+    {en:"prevent", pron:"/prɪˈvent/", he:"למנוע|מונע|מניעה"},
+    {en:"experience", pron:"/ɪkˈspɪər.i.əns/", he:"חוויה|ניסיון|לחוות"},
+    {en:"excellent", pron:"/ˈek.səl.ənt/", he:"מצוין|מצוינת|מעולה"},
+    {en:"terrible", pron:"/ˈter.ə.bəl/", he:"נורא|איום|נוראי"},
+    {en:"wonderful", pron:"/ˈwʌn.də.fəl/", he:"נהדר|נפלא|מקסים"},
+    {en:"horrible", pron:"/ˈhɔːr.ə.bəl/", he:"איום|נורא|מחריד"},
+  ],
+  veryhard: [
+    {en:"achievement", pron:"/əˈtʃiːv.mənt/", he:"הישג|הצלחה"},
+    {en:"determination", pron:"/dɪˌtɜːr.məˈneɪ.ʃən/", he:"נחישות|החלטיות"},
+    {en:"appreciate", pron:"/əˈpriː.ʃi.eɪt/", he:"להעריך|מעריך|מעריכה"},
+    {en:"establish", pron:"/ɪˈstæb.lɪʃ/", he:"להקים|לבסס|לכונן"},
+    {en:"significant", pron:"/sɪɡˈnɪf.ɪ.kənt/", he:"משמעותי|חשוב|מהותי"},
+    {en:"reluctant", pron:"/rɪˈlʌk.tənt/", he:"לא מוכן|מהסס|חסר חשק"},
+    {en:"persistent", pron:"/pərˈsɪs.tənt/", he:"מתמיד|עקבי|דבק במטרה"},
+    {en:"competent", pron:"/ˈkɑːm.pə.tənt/", he:"מוכשר|כשיר|יכול"},
+    {en:"sufficient", pron:"/səˈfɪʃ.ənt/", he:"מספיק|די"},
+    {en:"acquire", pron:"/əˈkwaɪər/", he:"לרכוש|לקבל|להשיג"},
+    {en:"analyze", pron:"/ˈæn.əl.aɪz/", he:"לנתח|מנתח|מנתחת"},
+    {en:"emphasize", pron:"/ˈem.fə.saɪz/", he:"להדגיש|מדגיש"},
+    {en:"investigate", pron:"/ɪnˈves.tɪ.ɡeɪt/", he:"לחקור|לבדוק|מחקר"},
+    {en:"contribute", pron:"/kənˈtrɪb.juːt/", he:"לתרום|תורם|תורמת"},
+    {en:"demonstrate", pron:"/ˈdem.ən.streɪt/", he:"להפגין|להדגים|להראות"},
+    {en:"hypothesis", pron:"/haɪˈpɑː.θə.sɪs/", he:"השערה|הנחה"},
+    {en:"phenomenon", pron:"/fəˈnɑː.mə.nɑːn/", he:"תופעה"},
+    {en:"controversy", pron:"/ˈkɑːn.trə.vɜːr.si/", he:"מחלוקת|פולמוס|ויכוח"},
+    {en:"perspective", pron:"/pərˈspek.tɪv/", he:"נקודת מבט|פרספקטיבה"},
+    {en:"inevitable", pron:"/ɪˈnev.ɪ.tə.bəl/", he:"בלתי נמנע|הכרחי"},
+    {en:"transparent", pron:"/trænˈspær.ənt/", he:"שקוף|שקופה"},
+    {en:"sophisticated", pron:"/səˈfɪs.tɪ.keɪ.tɪd/", he:"מתוחכם|מתוחכמת|מתקדם"},
+    {en:"ambiguous", pron:"/æmˈbɪɡ.ju.əs/", he:"דו משמעי|מעורפל|לא ברור"},
+    {en:"sincere", pron:"/sɪnˈsɪər/", he:"כן|כנה|אמיתי|אמיתית"},
+    {en:"reluctance", pron:"/rɪˈlʌk.təns/", he:"היסוס|חוסר רצון"},
+    {en:"inherent", pron:"/ɪnˈhɪər.ənt/", he:"מובנה|מטבעו|פנימי"},
+    {en:"compelling", pron:"/kəmˈpel.ɪŋ/", he:"משכנע|מרתק|לוחץ"},
+    {en:"diligent", pron:"/ˈdɪl.ɪ.dʒənt/", he:"חרוץ|מסור|שקדן"},
+    {en:"prudent", pron:"/ˈpruː.dənt/", he:"זהיר|נבון|שקול"},
+    {en:"profound", pron:"/prəˈfaʊnd/", he:"עמוק|רב משמעות"},
+    {en:"diverse", pron:"/daɪˈvɜːrs/", he:"מגוון|שונה|מגוונת"},
+    {en:"abundant", pron:"/əˈbʌn.dənt/", he:"שופע|בשפע|מרובה"},
+    {en:"comprehensive", pron:"/ˌkɑːm.prɪˈhen.sɪv/", he:"מקיף|מקיפה|כולל"},
+    {en:"feasible", pron:"/ˈfiː.zə.bəl/", he:"אפשרי|בר ביצוע|מעשי"},
+    {en:"elaborate", pron:"/ɪˈlæb.ə.rət/", he:"מפורט|להרחיב|מורכב"},
+    {en:"conscientious", pron:"/ˌkɑːn.ʃiˈen.ʃəs/", he:"מצפוני|אחראי|קפדן"},
+    {en:"meticulous", pron:"/məˈtɪk.jə.ləs/", he:"קפדן|דקדקני|מדוקדק"},
+    {en:"resilient", pron:"/rɪˈzɪl.jənt/", he:"חסון|עמיד|בעל חוסן"},
+    {en:"versatile", pron:"/ˈvɜːr.sə.təl/", he:"רב תכליתי|גמיש"},
+    {en:"vivid", pron:"/ˈvɪv.ɪd/", he:"חי|בהיר|ברור"},
+    {en:"vague", pron:"/veɪɡ/", he:"מעורפל|לא ברור|לא מוגדר"},
+    {en:"profound", pron:"/prəˈfaʊnd/", he:"עמוק|רב משמעות"},
+    {en:"subtle", pron:"/ˈsʌt.əl/", he:"עדין|דק|מתוחכם"},
+    {en:"thorough", pron:"/ˈθɜːr.oʊ/", he:"יסודי|מקיף|מעמיק"},
+    {en:"genuine", pron:"/ˈdʒen.ju.ɪn/", he:"אמיתי|מקורי|כן"},
+    {en:"obstacle", pron:"/ˈɑːb.stə.kəl/", he:"מכשול|מחסום"},
+    {en:"endeavor", pron:"/ɪnˈdev.ər/", he:"מאמץ|השתדלות|להתאמץ"},
+    {en:"vigilant", pron:"/ˈvɪdʒ.əl.ənt/", he:"ערני|זהיר|דרוך"},
+    {en:"benevolent", pron:"/bəˈnev.əl.ənt/", he:"רב חסד|נדיב|אוהד"},
+    {en:"reverberate", pron:"/rɪˈvɜːr.bə.reɪt/", he:"להדהד|לחזור|להישמע חזק"},
+  ],
+  impossible: [
+    {en:"serendipity", pron:"/ˌser.ənˈdɪp.ə.ti/", he:"מציאה מקרית|אקראיות מבורכת"},
+    {en:"ephemeral", pron:"/ɪˈfem.ər.əl/", he:"חולף|בן חלוף|זמני"},
+    {en:"ubiquitous", pron:"/juːˈbɪk.wə.təs/", he:"נמצא בכל מקום|נפוץ ביותר"},
+    {en:"quintessential", pron:"/ˌkwɪn.tɪˈsen.ʃəl/", he:"מובהק|טיפוסי|הטוב ביותר"},
+    {en:"perfunctory", pron:"/pərˈfʌŋk.tər.i/", he:"שטחי|פורמלי|חסר לב"},
+    {en:"obfuscate", pron:"/ˈɑːb.fə.skeɪt/", he:"לטשטש|לבלבל|להסתיר"},
+    {en:"sycophant", pron:"/ˈsɪk.ə.fənt/", he:"חנפן|מתחנף"},
+    {en:"surreptitious", pron:"/ˌsɜːr.əpˈtɪʃ.əs/", he:"חשאי|סודי|מתבצע בסתר"},
+    {en:"vicissitude", pron:"/vɪˈsɪs.ɪ.tuːd/", he:"תהפוכה|שינוי גורל"},
+    {en:"pulchritude", pron:"/ˈpʌl.krɪ.tuːd/", he:"יופי|יופי פיזי"},
+    {en:"defenestration", pron:"/diːˌfen.ɪˈstreɪ.ʃən/", he:"השלכה מחלון|זריקה מחלון"},
+    {en:"sesquipedalian", pron:"/ˌses.kwɪ.pəˈdeɪ.li.ən/", he:"שימוש במילים ארוכות|רב הברתי"},
+    {en:"floccinaucinihilipilification", pron:"/long/", he:"ביטול חשיבות|הערכה כחסר ערך"},
+    {en:"antidisestablishmentarianism", pron:"/ˌæn.tiˌdɪs.ɪˈstæb.lɪʃ.mənˌtær.i.ə.nɪz.əm/", he:"התנגדות לביטול קשר דת ומדינה"},
+    {en:"pertinacious", pron:"/ˌpɜːr.tɪˈneɪ.ʃəs/", he:"עקשן|דבק במטרה בעיקשות"},
+    {en:"mellifluous", pron:"/məˈlɪf.lu.əs/", he:"ערב לאוזן|מתוק|זורם"},
+    {en:"recalcitrant", pron:"/rɪˈkæl.sɪ.trənt/", he:"סרבן|מורד|לא צייתן"},
+    {en:"perspicacious", pron:"/ˌpɜːr.spɪˈkeɪ.ʃəs/", he:"חד הבחנה|נבון|בעל תובנה"},
+    {en:"obstreperous", pron:"/əbˈstrep.ər.əs/", he:"רעשני|שובב|לא ממושמע"},
+    {en:"sanguine", pron:"/ˈsæŋ.ɡwɪn/", he:"אופטימי|שאנן|אדמומי"},
+    {en:"truculent", pron:"/ˈtrʌk.jə.lənt/", he:"תוקפני|מאיים|אגרסיבי"},
+    {en:"penultimate", pron:"/penˈʌl.tɪ.mət/", he:"לפני האחרון|הלפני אחרון"},
+    {en:"loquacious", pron:"/loʊˈkweɪ.ʃəs/", he:"פטפטן|רב מילים|דברן"},
+    {en:"acrimonious", pron:"/ˌæk.rɪˈmoʊ.ni.əs/", he:"זועם|מריר|חריף"},
+    {en:"cantankerous", pron:"/kænˈtæŋ.kər.əs/", he:"רגזן|נרגן|מריב"},
+    {en:"egregious", pron:"/ɪˈɡriː.dʒəs/", he:"חמור|מקומם|נורא במיוחד"},
+    {en:"fastidious", pron:"/fæˈstɪd.i.əs/", he:"קפדן|בררן|דקדקן"},
+    {en:"grandiloquent", pron:"/ɡrænˈdɪl.ə.kwənt/", he:"רברבן|מיומר|פומפוזי"},
+    {en:"hagiography", pron:"/ˌhæɡ.iˈɑː.ɡrə.fi/", he:"כתיבה משבחת|תיאור מהלל"},
+    {en:"ineffable", pron:"/ɪnˈef.ə.bəl/", he:"בל יתואר|שלא ניתן לבטא במילים"},
+    {en:"juxtaposition", pron:"/ˌdʒʌk.stə.pəˈzɪʃ.ən/", he:"השוואה|הצבה זה לצד זה"},
+    {en:"kleptocracy", pron:"/klepˈtɒk.rə.si/", he:"שלטון גנבים|שלטון של גנבים"},
+    {en:"machiavellian", pron:"/ˌmæk.i.əˈvel.i.ən/", he:"מקיאווליסטי|ערמומי|חסר מצפון"},
+    {en:"nadir", pron:"/ˈneɪ.dɪər/", he:"נקודת השפל|התחתית|הנקודה הנמוכה"},
+    {en:"obeisance", pron:"/oʊˈbeɪ.səns/", he:"הכנעה|השתחוויה|כניעה"},
+    {en:"propinquity", pron:"/prəˈpɪŋ.kwə.ti/", he:"קרבה|סמיכות|דמיון"},
+    {en:"querulous", pron:"/ˈkwer.ə.ləs/", he:"מתלונן|רוטן|נרגן"},
+    {en:"rambunctious", pron:"/ræmˈbʌŋk.ʃəs/", he:"שובב|פרוע|הומה"},
+    {en:"saturnine", pron:"/ˈsæt.ər.naɪn/", he:"מלנכולי|זועף|קודר"},
+    {en:"tergiversation", pron:"/ˌtɜːr.dʒɪ.vərˈseɪ.ʃən/", he:"חמקנות|התחמקות|שינוי דעה"},
+  ]
+};
+
+// ==========================================================
+// חישוב כמה מילים זמינות היום
+// ==========================================================
+function getDaysSinceStart(){
+  const start = new Date(SITE_START_DATE);
+  const today = new Date();
+  start.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+  const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+  return Math.max(0, diff);
+}
+
+function getActiveWordCount(level){
+  const days = getDaysSinceStart();
+  const count = INITIAL_WORDS_PER_LEVEL + (days * DAILY_NEW_WORDS);
+  return Math.min(count, wordBank[level].length);
+}
+
+function getActiveWords(level){
+  return wordBank[level].slice(0, getActiveWordCount(level));
+}
+
+// ==========================================================
+// משתנים גלובליים למשחק
+// ==========================================================
+const levelNames = {easy:"קל", medium:"בינוני", hard:"קשה", veryhard:"קשה מאוד", impossible:"בלתי אפשרי 💀"};
+const levelColors = {easy:"#10B981", medium:"#3B82F6", hard:"#F59E0B", veryhard:"#EF4444", impossible:"#1F2937"};
+const levelPoints = {easy:5, medium:10, hard:15, veryhard:25, impossible:50};
+
+const motivationalMessages = [
+  "אל תתייאש, תנסה שוב! 💪",
+  "כל אחד טועה, ככה לומדים! 🌟",
+  "אתה בדרך הנכונה, תמשיך! 🚀",
+  "כמעט הצלחת! נסה את המילה הבאה 🎯",
+  "טעויות הן חלק מהלמידה! 📚",
+  "אל דאגה, גם אלופים טועים! ⚽",
+  "עוד מעט תזכור את כולן! 🧠",
+];
+
+let currentLevel = 'easy';
+let currentWord = null;
+let recentWords = [];
+let score = 0;
+let correctCount = 0;
+let totalCount = 0;
+let currentUser = null;
+let currentUserKey = null;
+let isAdmin = false;
+
+function userKey(suffix){
+  return 'wordup-' + currentUserKey + '-' + suffix;
+}
+
+function loadUserStats(){
+  score = parseInt(localStorage.getItem(userKey('score')) || '0');
+  correctCount = parseInt(localStorage.getItem(userKey('correct')) || '0');
+  totalCount = parseInt(localStorage.getItem(userKey('total')) || '0');
+}
+
+// ==========================================================
+// כניסה ויציאה
+// ==========================================================
+function doLogin(){
+  const pwd = document.getElementById('password-input').value.trim();
+  const err = document.getElementById('login-error');
+
+  if(pwd.length !== 5){
+    err.textContent = 'הסיסמה חייבת להיות 5 ספרות בדיוק 🔢';
+    err.style.display = 'block';
+    err.style.animation = 'none';
+    setTimeout(() => err.style.animation = 'shake 0.4s', 10);
+    return;
+  }
+
+  // בדיקה אם זה המנהל
+  if(pwd === ADMIN_PASSWORD){
+    currentUserKey = pwd;
+    currentUser = ADMIN_NAME;
+    isAdmin = true;
+    localStorage.setItem('wordup-current-user', pwd);
+    showAdminPanel();
+    return;
+  }
+
+  // בדיקה אם זה תלמיד
+  students = loadStudents();
+  const name = students[pwd];
+  if(name){
+    currentUserKey = pwd;
+    currentUser = name;
+    isAdmin = false;
+    localStorage.setItem('wordup-current-user', pwd);
+    showWelcome();
+  } else {
+    err.textContent = 'סיסמה לא נכונה, נסה שוב 🤔';
+    err.style.display = 'block';
+    err.style.animation = 'none';
+    setTimeout(() => err.style.animation = 'shake 0.4s', 10);
+    document.getElementById('password-input').value = '';
+  }
+}
+
+function showWelcome(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('welcome-screen').style.display = 'block';
+  document.getElementById('welcome-name').textContent = currentUser;
+}
+
+function goToDifficulty(){
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('diff-screen').style.display = 'block';
+  document.getElementById('user-pill').style.display = 'inline-flex';
+  document.getElementById('user-name').textContent = currentUser;
+  loadUserStats();
+  updateScoreDisplay();
+  document.getElementById('words-today').textContent = getActiveWordCount('easy');
+}
+
+function showAdminPanel(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'block';
+  document.getElementById('user-pill').style.display = 'inline-flex';
+  document.getElementById('user-name').textContent = '👩‍🏫 ' + ADMIN_NAME;
+  renderStudents();
+  renderPasswords();
+  renderStats();
+}
+
+function logout(){
+  if(!confirm('להתנתק? הנתונים שלך נשמרים במחשב הזה.')) return;
+  localStorage.removeItem('wordup-current-user');
+  currentUser = null;
+  currentUserKey = null;
+  isAdmin = false;
+  document.getElementById('user-pill').style.display = 'none';
+  document.getElementById('score-pill').style.display = 'none';
+  document.getElementById('diff-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('password-input').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+function checkAutoLogin(){
+  // הסרנו את הכניסה האוטומטית - כל אחד חייב להזין סיסמה
+  // (אם תרצה להחזיר את הכניסה האוטומטית, תחזיר את הקוד הקודם)
+  return;
+}
+
+// ==========================================================
+// פונקציות פאנל המנהל
+// ==========================================================
+function showAdminTab(name, el){
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('admin-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function generatePassword(){
+  students = loadStudents();
+  const existing = new Set([...Object.keys(students), ADMIN_PASSWORD]);
+  let attempts = 0;
+  while(attempts < 1000){
+    const code = String(Math.floor(10000 + Math.random() * 90000));
+    if(!existing.has(code)) return code;
+    attempts++;
+  }
+  return null;
+}
+
+function addStudent(){
+  const nameInput = document.getElementById('new-student-name');
+  const name = nameInput.value.trim();
+  if(!name){
+    alert('בבקשה תכניסי שם תלמיד');
+    nameInput.focus();
+    return;
+  }
+
+  const password = generatePassword();
+  if(!password){
+    alert('אין מספיק סיסמאות פנויות');
+    return;
+  }
+
+  students = loadStudents();
+  students[password] = name;
+  saveStudents(students);
+
+  nameInput.value = '';
+  renderStudents();
+  renderPasswords();
+  renderStats();
+
+  // הודעה למורה
+  alert('✅ ' + name + ' נוסף בהצלחה!\nהסיסמה: ' + password + '\n\nתעבירי לתלמיד את הסיסמה');
+}
+
+function deleteStudent(password){
+  students = loadStudents();
+  const name = students[password];
+  if(!confirm('למחוק את ' + name + '? הנקודות שלו יישארו במחשב.')) return;
+  delete students[password];
+  saveStudents(students);
+  renderStudents();
+  renderPasswords();
+  renderStats();
+}
+
+function getStudentStats(password){
+  const c = parseInt(localStorage.getItem('wordup-' + password + '-correct') || '0');
+  const t = parseInt(localStorage.getItem('wordup-' + password + '-total') || '0');
+  const s = parseInt(localStorage.getItem('wordup-' + password + '-score') || '0');
+  return {correct: c, total: t, score: s, pct: t > 0 ? Math.round((c/t)*100) : 0};
+}
+
+function renderStudents(){
+  students = loadStudents();
+  const list = document.getElementById('student-list');
+  const entries = Object.entries(students);
+
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>עוד אין תלמידים. תוסיפי תלמיד ראשון למעלה!</div></div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  entries.forEach(([pwd, name]) => {
+    const stats = getStudentStats(pwd);
+    const pctClass = stats.pct >= 70 ? '' : stats.pct >= 40 ? 'medium' : 'low';
+    const row = document.createElement('div');
+    row.className = 'student-row';
+    row.innerHTML = `
+      <div class="info">
+        <div class="name">👤 ${name}</div>
+        <div class="stats-line">
+          <span class="stat">✅ ${stats.correct} נכון</span>
+          <span class="stat">📝 ${stats.total} שאלות</span>
+          <span class="stat">📊 ${stats.pct}%</span>
+          <span class="stat">⭐ ${stats.score} נק'</span>
+        </div>
+        <div class="progress-mini"><div class="progress-mini-fill ${pctClass}" style="width:${stats.pct}%"></div></div>
+      </div>
+      <div class="password">${pwd}</div>
+      <div class="actions">
+        <button class="icon-btn" onclick="copyPassword('${pwd}', this)" title="העתק סיסמה">📋</button>
+        <button class="icon-btn danger" onclick="deleteStudent('${pwd}')" title="מחק תלמיד">🗑️</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function renderPasswords(){
+  students = loadStudents();
+  const list = document.getElementById('passwords-list');
+  const entries = Object.entries(students);
+
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty-state"><div class="icon">🔐</div><div>עוד אין סיסמאות</div></div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  entries.forEach(([pwd, name]) => {
+    const card = document.createElement('div');
+    card.className = 'password-card';
+    card.innerHTML = `
+      <div class="name">👤 ${name}</div>
+      <div class="code">${pwd}</div>
+      <button class="copy-btn" onclick="copyPassword('${pwd}', this)">📋 העתק</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function copyPassword(pwd, btn){
+  navigator.clipboard.writeText(pwd).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '✓ הועתק';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove('copied');
+    }, 1500);
+  }).catch(() => {
+    prompt('העתק את הסיסמה:', pwd);
+  });
+}
+
+function renderStats(){
+  students = loadStudents();
+  const entries = Object.entries(students);
+
+  // ריכוז סטטיסטיקות
+  let totalQuestions = 0;
+  let totalCorrect = 0;
+  let totalPoints = 0;
+  const studentStats = entries.map(([pwd, name]) => {
+    const s = getStudentStats(pwd);
+    totalQuestions += s.total;
+    totalCorrect += s.correct;
+    totalPoints += s.score;
+    return {pwd, name, ...s};
+  });
+
+  const overallPct = totalQuestions > 0 ? Math.round((totalCorrect/totalQuestions)*100) : 0;
+  const activeStudents = studentStats.filter(s => s.total > 0).length;
+
+  document.getElementById('overview-stats').innerHTML = `
+    <div class="stat-card"><div class="value">${entries.length}</div><div class="label">תלמידים</div></div>
+    <div class="stat-card"><div class="value">${activeStudents}</div><div class="label">פעילים</div></div>
+    <div class="stat-card"><div class="value">${totalQuestions}</div><div class="label">סה״כ שאלות</div></div>
+    <div class="stat-card"><div class="value">${overallPct}%</div><div class="label">הצלחה ממוצעת</div></div>
+    <div class="stat-card"><div class="value">${getActiveWordCount('easy')}</div><div class="label">מילים זמינות היום</div></div>
+  `;
+
+  // טבלת תלמידים (מסודרת לפי נקודות)
+  studentStats.sort((a, b) => b.score - a.score);
+  const tbody = document.getElementById('stats-tbody');
+
+  if(studentStats.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#6B6B6B;padding:20px;">עדיין אין תלמידים</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = studentStats.map((s, i) => {
+    const medal = i === 0 && s.score > 0 ? '🥇 ' : i === 1 && s.score > 0 ? '🥈 ' : i === 2 && s.score > 0 ? '🥉 ' : '';
+    const pctColor = s.pct >= 70 ? '#059669' : s.pct >= 40 ? '#D97706' : s.pct > 0 ? '#DC2626' : '#9CA3AF';
+    return `
+      <tr>
+        <td><strong>${medal}${s.name}</strong></td>
+        <td>${s.correct}</td>
+        <td>${s.total}</td>
+        <td style="color:${pctColor};font-weight:700">${s.pct}%</td>
+        <td>⭐ ${s.score}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ==========================================================
+// משחק
+// ==========================================================
+function updateScoreDisplay(){
+  document.getElementById('score').textContent = score;
+  document.getElementById('correct-count').textContent = correctCount;
+  document.getElementById('total-count').textContent = totalCount;
+  document.getElementById('score-pill').style.display = 'inline-block';
+}
+
+function startGame(level){
+  currentLevel = level;
+  document.getElementById('diff-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  const badge = document.getElementById('level-badge');
+  badge.textContent = levelNames[level];
+  badge.style.background = levelColors[level];
+
+  updateScoreDisplay();
+  pickRandomWord();
+}
+
+function backToMenu(){
+  document.getElementById('diff-screen').style.display = 'block';
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('words-today').textContent = getActiveWordCount('easy');
+}
+
+function pickRandomWord(){
+  const list = getActiveWords(currentLevel);
+  let pool = list.filter(w => !recentWords.includes(w.en));
+  if(pool.length === 0){ recentWords = []; pool = list; }
+
+  currentWord = pool[Math.floor(Math.random() * pool.length)];
+  recentWords.push(currentWord.en);
+  if(recentWords.length > Math.min(8, list.length - 1)) recentWords.shift();
+
+  document.getElementById('eng-word').textContent = currentWord.en;
+  document.getElementById('pronun').textContent = currentWord.pron;
+  document.getElementById('answer-input').value = '';
+  document.getElementById('answer-input').focus();
+}
+
+function normalize(str){
+  return str.trim().toLowerCase()
+    .replace(/[״"׳']/g, '')
+    .replace(/[.,!?;:\-־]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function checkAnswer(){
+  const userAnswer = document.getElementById('answer-input').value.trim();
+  if(!userAnswer) return;
+
+  totalCount++;
+  const validAnswers = currentWord.he.split('|').map(normalize);
+  const normalizedUser = normalize(userAnswer);
+  const isCorrect = validAnswers.includes(normalizedUser);
+
+  if(isCorrect){
+    correctCount++;
+    score += levelPoints[currentLevel];
+    showCorrect();
+  } else {
+    showWrong();
+  }
+
+  localStorage.setItem(userKey('score'), score);
+  localStorage.setItem(userKey('correct'), correctCount);
+  localStorage.setItem(userKey('total'), totalCount);
+  updateScoreDisplay();
+}
+
+function dontKnow(){
+  totalCount++;
+  localStorage.setItem(userKey('total'), totalCount);
+  updateScoreDisplay();
+  showDontKnow();
+}
+
+function showCorrect(){
+  const happyEmojis = ['🎉','🌟','🏆','👏','💯','🥳','😄','🤩','🚀','⭐'];
+  const happyTitles = ['כל הכבוד!','מעולה!','נהדר!','איזה יופי!','אלוף!','נכון מאוד!','פנטסטי!'];
+  const happyMessages = ['תשובה נכונה!','המשך כך!','אתה לומד מעולה!','עוד מילה במאגר! 🧠','תרגום מושלם!','כל הכבוד שזכרת!'];
+
+  document.getElementById('modal-emoji').textContent = happyEmojis[Math.floor(Math.random() * happyEmojis.length)];
+  document.getElementById('modal-title').textContent = happyTitles[Math.floor(Math.random() * happyTitles.length)];
+  document.getElementById('modal-message').textContent = happyMessages[Math.floor(Math.random() * happyMessages.length)];
+  document.getElementById('modal-correct').style.display = 'none';
+
+  const pts = document.getElementById('points-earned');
+  pts.textContent = '+' + levelPoints[currentLevel] + ' נקודות ⭐';
+  pts.style.display = 'inline-block';
+
+  document.getElementById('modal').className = 'modal correct';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function showWrong(){
+  const sadEmojis = ['😢','😔','💔','😞','🥺','😿'];
+  const msg = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+
+  document.getElementById('modal-emoji').textContent = sadEmojis[Math.floor(Math.random() * sadEmojis.length)];
+  document.getElementById('modal-title').textContent = 'אופס...';
+  document.getElementById('modal-message').textContent = msg;
+
+  document.getElementById('modal-correct').style.display = 'block';
+  const validAnswers = currentWord.he.split('|');
+  document.getElementById('modal-correct-word').textContent = validAnswers[0];
+
+  document.getElementById('points-earned').style.display = 'none';
+  document.getElementById('modal').className = 'modal wrong';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function showDontKnow(){
+  const neutralEmojis = ['📚','💡','🧠','📖','✏️','🎓'];
+  const titles = ['בוא נלמד יחד!','אין בעיה!','עכשיו תכיר אותה!','כל מילה היא הזדמנות'];
+  const messages = ['בפעם הבאה תזכור! 💪','המילה הזו במאגר שלך עכשיו','המשך כך — ככה לומדים!','כל הכבוד שניסית!'];
+
+  document.getElementById('modal-emoji').textContent = neutralEmojis[Math.floor(Math.random() * neutralEmojis.length)];
+  document.getElementById('modal-title').textContent = titles[Math.floor(Math.random() * titles.length)];
+  document.getElementById('modal-message').textContent = messages[Math.floor(Math.random() * messages.length)];
+
+  document.getElementById('modal-correct').style.display = 'block';
+  const validAnswers = currentWord.he.split('|');
+  document.getElementById('modal-correct-word').textContent = validAnswers[0];
+
+  document.getElementById('points-earned').style.display = 'none';
+  document.getElementById('modal').className = 'modal neutral';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('show');
+  pickRandomWord();
+}
+
+function speak(){
+  if(!currentWord) return;
+  if('speechSynthesis' in window){
+    const u = new SpeechSynthesisUtterance(currentWord.en);
+    u.lang = 'en-US';
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && document.getElementById('modal-overlay').classList.contains('show')){
+    closeModal();
+  }
+});
+
+checkAutoLogin();
+</script>
+</body>
+</html>
