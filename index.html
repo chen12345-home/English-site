@@ -346,14 +346,25 @@ let studentsCache = {};
 let students = {};
 
 async function refreshStudentsCache(){
-  const { data, error } = await db.from('students').select('*');
-  if(error){ console.error('DB error:', error); return; }
-  studentsCache = {};
-  students = {};
-  (data || []).forEach(s => {
-    studentsCache[s.password] = { name: s.name, correct: s.correct||0, total: s.total||0, score: s.score||0 };
-    students[s.password] = s.name;
-  });
+  try {
+    const { data, error } = await db.from('students').select('*');
+    if(error){
+      console.error('Supabase error:', error);
+      document.getElementById('student-list').innerHTML =
+        '<div class="empty-state"><div class="icon">❌</div><div>שגיאה בחיבור ל-Supabase:<br><small style="color:#EF4444">' + error.message + '</small></div></div>';
+      return;
+    }
+    studentsCache = {};
+    students = {};
+    (data || []).forEach(s => {
+      studentsCache[s.password] = { name: s.name, correct: s.correct||0, total: s.total||0, score: s.score||0 };
+      students[s.password] = s.name;
+    });
+  } catch(e) {
+    console.error('refreshStudentsCache threw:', e);
+    document.getElementById('student-list').innerHTML =
+      '<div class="empty-state"><div class="icon">❌</div><div>שגיאת רשת:<br><small style="color:#EF4444">' + e.message + '</small></div></div>';
+  }
 }
 
 function getStudentStats(password){
