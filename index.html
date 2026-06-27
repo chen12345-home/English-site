@@ -253,7 +253,10 @@
   <!-- ADMIN PANEL                  -->
   <!-- ============================ -->
   <div class="admin-panel" id="admin-panel" style="display:none">
-    <h2>👩‍🏫 פאנל מורה</h2>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+      <h2 style="margin-bottom:0">👩‍🏫 פאנל מורה</h2>
+      <button class="icon-btn" onclick="refreshAdmin()" id="refresh-btn" title="רענן נתונים" style="font-size:18px;width:40px;height:40px;">🔄</button>
+    </div>
     <p class="subtitle">ניהול תלמידים, סיסמאות וצפייה בהתקדמות</p>
 
     <div class="admin-tabs">
@@ -726,24 +729,41 @@ async function doLogin(){
     return;
   }
 
+  btn.textContent = 'טוען...';
+  btn.disabled = true;
+
+  // בדוק קודם בטבלת מורים
+  const { data: teacherData } = await db.from('teachers').select('name').eq('password', pwd).single();
+  if(teacherData){
+    currentUserKey = pwd;
+    currentUser = teacherData.name;
+    isAdmin = true;
+    localStorage.setItem('wordup-current-user', pwd);
+    btn.textContent = 'כניסה ←';
+    btn.disabled = false;
+    await showAdminPanel();
+    return;
+  }
+
+  // fallback לסיסמת מורה hardcoded (למקרה שה-DB לא זמין)
   if(pwd === ADMIN_PASSWORD){
     currentUserKey = pwd;
     currentUser = ADMIN_NAME;
     isAdmin = true;
     localStorage.setItem('wordup-current-user', pwd);
+    btn.textContent = 'כניסה ←';
+    btn.disabled = false;
     await showAdminPanel();
     return;
   }
 
-  btn.textContent = 'טוען...';
-  btn.disabled = true;
-
-  const { data } = await db.from('students').select('name').eq('password', pwd).single();
+  // בדוק בטבלת תלמידים
+  const { data: studentData } = await db.from('students').select('name').eq('password', pwd).single();
 
   btn.textContent = 'כניסה ←';
   btn.disabled = false;
 
-  if(!data){
+  if(!studentData){
     err.textContent = 'סיסמה לא נכונה, נסה שוב 🤔';
     err.style.display = 'block';
     err.style.animation = 'none';
@@ -753,7 +773,7 @@ async function doLogin(){
   }
 
   currentUserKey = pwd;
-  currentUser = data.name;
+  currentUser = studentData.name;
   isAdmin = false;
   localStorage.setItem('wordup-current-user', pwd);
   showWelcome();
@@ -779,11 +799,24 @@ async function showAdminPanel(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-panel').style.display = 'block';
   document.getElementById('user-pill').style.display = 'inline-flex';
-  document.getElementById('user-name').textContent = '👩‍🏫 ' + ADMIN_NAME;
+  document.getElementById('user-name').textContent = '👩‍🏫 ' + currentUser;
+  document.getElementById('student-list').innerHTML = '<div class="empty-state"><div class="icon">⏳</div><div>טוען תלמידים...</div></div>';
   await refreshStudentsCache();
   renderStudents();
   renderPasswords();
   renderStats();
+}
+
+async function refreshAdmin(){
+  const btn = document.getElementById('refresh-btn');
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  await refreshStudentsCache();
+  renderStudents();
+  renderPasswords();
+  renderStats();
+  btn.textContent = '🔄';
+  btn.disabled = false;
 }
 
 function logout(){
@@ -821,12 +854,16 @@ function showAdminTab(name, el){
 
 async function addStudent(){
   const nameInput = document.getElementById('new-student-name');
+  const addBtn = document.querySelector('.add-student-btn');
   const name = nameInput.value.trim();
   if(!name){
     alert('בבקשה תכניסי שם תלמיד');
     nameInput.focus();
     return;
   }
+
+  addBtn.textContent = 'שומר...';
+  addBtn.disabled = true;
 
   await refreshStudentsCache();
   const existing = new Set([...Object.keys(studentsCache), ADMIN_PASSWORD]);
@@ -835,9 +872,16 @@ async function addStudent(){
     const code = String(Math.floor(10000 + Math.random() * 90000));
     if(!existing.has(code)){ password = code; break; }
   }
-  if(!password){ alert('אין מספיק סיסמאות פנויות'); return; }
+  if(!password){
+    addBtn.textContent = 'צור סיסמה';
+    addBtn.disabled = false;
+    alert('אין מספיק סיסמאות פנויות');
+    return;
+  }
 
   const { error } = await db.from('students').insert({ password, name, correct: 0, total: 0, score: 0 });
+  addBtn.textContent = 'צור סיסמה';
+  addBtn.disabled = false;
   if(error){ alert('שגיאה בהוספת תלמיד 😢\n' + error.message); return; }
 
   nameInput.value = '';
