@@ -347,11 +347,15 @@ let students = {};
 
 async function refreshStudentsCache(){
   try {
-    const { data, error } = await db.from('students').select('*');
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout - Supabase לא הגיב תוך 10 שניות')), 10000)
+    );
+    const query = db.from('students').select('*').then(r => r);
+    const { data, error } = await Promise.race([query, timeout]);
+
     if(error){
-      console.error('Supabase error:', error);
-      document.getElementById('student-list').innerHTML =
-        '<div class="empty-state"><div class="icon">❌</div><div>שגיאה בחיבור ל-Supabase:<br><small style="color:#EF4444">' + error.message + '</small></div></div>';
+      console.error('Supabase error:', JSON.stringify(error));
+      showListError('שגיאה מ-Supabase: ' + error.message + ' (code: ' + error.code + ')');
       return;
     }
     studentsCache = {};
@@ -362,9 +366,13 @@ async function refreshStudentsCache(){
     });
   } catch(e) {
     console.error('refreshStudentsCache threw:', e);
-    document.getElementById('student-list').innerHTML =
-      '<div class="empty-state"><div class="icon">❌</div><div>שגיאת רשת:<br><small style="color:#EF4444">' + e.message + '</small></div></div>';
+    showListError('שגיאת רשת: ' + e.message);
   }
+}
+
+function showListError(msg){
+  const el = document.getElementById('student-list');
+  if(el) el.innerHTML = '<div class="empty-state"><div class="icon">❌</div><div style="color:#EF4444;font-size:13px">' + msg + '</div></div>';
 }
 
 function getStudentStats(password){
