@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ברוכים הבאים לאתר של גיא</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Heebo", Arial, sans-serif; }
   body { background: linear-gradient(135deg, #EEF2FF 0%, #F5F5F0 100%); min-height: 100vh; padding: 20px; color: #1a1a1a; }
@@ -319,37 +320,43 @@
 
 <script>
 // ==========================================================
+// Supabase
+// ==========================================================
+const SUPABASE_URL = 'https://eljexgkwlwrsozkuvzqf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Tu13VYyP4MbmRAmZ0fY6lQ_l7KILJ6h';
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ==========================================================
 // הגדרות כלליות
 // ==========================================================
-const ADMIN_PASSWORD = "99999";  // הסיסמה של המורה
+const ADMIN_PASSWORD = "99999";
 const ADMIN_NAME = "מורה";
-const SITE_START_DATE = "2026-06-26"; // תאריך התחלת המערכת - אל תשנה!
+const SITE_START_DATE = "2026-06-26";
 const INITIAL_WORDS_PER_LEVEL = 20;
 const DAILY_NEW_WORDS = 5;
 
 // ==========================================================
-// רשימת תלמידים ברירת מחדל (נטענת רק בפעם הראשונה)
-// אחר כך נשמרת ב-localStorage והמורה יכולה לערוך
+// Cache תלמידים (נטען מ-Supabase)
 // ==========================================================
-const DEFAULT_STUDENTS = {
-  "10001": "גיא"
-};
+let studentsCache = {};
+let students = {};
 
-// טעינת תלמידים מ-localStorage או יצירת ברירת מחדל
-function loadStudents(){
-  const saved = localStorage.getItem('wordup-students');
-  if(saved){
-    try { return JSON.parse(saved); } catch(e) { return {...DEFAULT_STUDENTS}; }
-  }
-  localStorage.setItem('wordup-students', JSON.stringify(DEFAULT_STUDENTS));
-  return {...DEFAULT_STUDENTS};
+async function refreshStudentsCache(){
+  const { data, error } = await db.from('students').select('*');
+  if(error){ console.error('DB error:', error); return; }
+  studentsCache = {};
+  students = {};
+  (data || []).forEach(s => {
+    studentsCache[s.password] = { name: s.name, correct: s.correct||0, total: s.total||0, score: s.score||0 };
+    students[s.password] = s.name;
+  });
 }
 
-function saveStudents(students){
-  localStorage.setItem('wordup-students', JSON.stringify(students));
+function getStudentStats(password){
+  const s = studentsCache[password] || { correct:0, total:0, score:0 };
+  return { correct: s.correct, total: s.total, score: s.score, pct: s.total>0 ? Math.round((s.correct/s.total)*100) : 0 };
 }
-
-let students = loadStudents();
 
 // ==========================================================
 // מאגר מילים - כל רמה עם הרבה מילים
@@ -691,18 +698,25 @@ function userKey(suffix){
   return 'wordup-' + currentUserKey + '-' + suffix;
 }
 
-function loadUserStats(){
-  score = parseInt(localStorage.getItem(userKey('score')) || '0');
-  correctCount = parseInt(localStorage.getItem(userKey('correct')) || '0');
-  totalCount = parseInt(localStorage.getItem(userKey('total')) || '0');
+async function loadUserStats(){
+  const { data } = await db.from('students').select('correct, total, score').eq('password', currentUserKey).single();
+  if(!data){ score=0; correctCount=0; totalCount=0; return; }
+  score = data.score||0;
+  correctCount = data.correct||0;
+  totalCount = data.total||0;
+}
+
+async function saveUserStats(){
+  await db.from('students').update({ correct: correctCount, total: totalCount, score }).eq('password', currentUserKey);
 }
 
 // ==========================================================
 // כניסה ויציאה
 // ==========================================================
-function doLogin(){
+async function doLogin(){
   const pwd = document.getElementById('password-input').value.trim();
   const err = document.getElementById('login-error');
+  const btn = document.querySelector('.login-btn');
 
   if(pwd.length !== 5){
     err.textContent = 'הסיסמה חייבת להיות 5 ספרות בדיוק 🔢';
@@ -712,32 +726,37 @@ function doLogin(){
     return;
   }
 
-  // בדיקה אם זה המנהל
   if(pwd === ADMIN_PASSWORD){
     currentUserKey = pwd;
     currentUser = ADMIN_NAME;
     isAdmin = true;
     localStorage.setItem('wordup-current-user', pwd);
-    showAdminPanel();
+    await showAdminPanel();
     return;
   }
 
-  // בדיקה אם זה תלמיד
-  students = loadStudents();
-  const name = students[pwd];
-  if(name){
-    currentUserKey = pwd;
-    currentUser = name;
-    isAdmin = false;
-    localStorage.setItem('wordup-current-user', pwd);
-    showWelcome();
-  } else {
+  btn.textContent = 'טוען...';
+  btn.disabled = true;
+
+  const { data } = await db.from('students').select('name').eq('password', pwd).single();
+
+  btn.textContent = 'כניסה ←';
+  btn.disabled = false;
+
+  if(!data){
     err.textContent = 'סיסמה לא נכונה, נסה שוב 🤔';
     err.style.display = 'block';
     err.style.animation = 'none';
     setTimeout(() => err.style.animation = 'shake 0.4s', 10);
     document.getElementById('password-input').value = '';
+    return;
   }
+
+  currentUserKey = pwd;
+  currentUser = data.name;
+  isAdmin = false;
+  localStorage.setItem('wordup-current-user', pwd);
+  showWelcome();
 }
 
 function showWelcome(){
@@ -746,28 +765,29 @@ function showWelcome(){
   document.getElementById('welcome-name').textContent = currentUser;
 }
 
-function goToDifficulty(){
+async function goToDifficulty(){
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('diff-screen').style.display = 'block';
   document.getElementById('user-pill').style.display = 'inline-flex';
   document.getElementById('user-name').textContent = currentUser;
-  loadUserStats();
+  await loadUserStats();
   updateScoreDisplay();
   document.getElementById('words-today').textContent = getActiveWordCount('easy');
 }
 
-function showAdminPanel(){
+async function showAdminPanel(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('admin-panel').style.display = 'block';
   document.getElementById('user-pill').style.display = 'inline-flex';
   document.getElementById('user-name').textContent = '👩‍🏫 ' + ADMIN_NAME;
+  await refreshStudentsCache();
   renderStudents();
   renderPasswords();
   renderStats();
 }
 
 function logout(){
-  if(!confirm('להתנתק? הנתונים שלך נשמרים במחשב הזה.')) return;
+  if(!confirm('להתנתק? הנתונים שלך נשמרים בענן ויהיו זמינים בכניסה הבאה.')) return;
   localStorage.removeItem('wordup-current-user');
   currentUser = null;
   currentUserKey = null;
@@ -799,19 +819,7 @@ function showAdminTab(name, el){
   el.classList.add('active');
 }
 
-function generatePassword(){
-  students = loadStudents();
-  const existing = new Set([...Object.keys(students), ADMIN_PASSWORD]);
-  let attempts = 0;
-  while(attempts < 1000){
-    const code = String(Math.floor(10000 + Math.random() * 90000));
-    if(!existing.has(code)) return code;
-    attempts++;
-  }
-  return null;
-}
-
-function addStudent(){
+async function addStudent(){
   const nameInput = document.getElementById('new-student-name');
   const name = nameInput.value.trim();
   if(!name){
@@ -820,41 +828,35 @@ function addStudent(){
     return;
   }
 
-  const password = generatePassword();
-  if(!password){
-    alert('אין מספיק סיסמאות פנויות');
-    return;
+  await refreshStudentsCache();
+  const existing = new Set([...Object.keys(studentsCache), ADMIN_PASSWORD]);
+  let password = null;
+  for(let i = 0; i < 1000; i++){
+    const code = String(Math.floor(10000 + Math.random() * 90000));
+    if(!existing.has(code)){ password = code; break; }
   }
+  if(!password){ alert('אין מספיק סיסמאות פנויות'); return; }
 
-  students = loadStudents();
-  students[password] = name;
-  saveStudents(students);
+  const { error } = await db.from('students').insert({ password, name, correct: 0, total: 0, score: 0 });
+  if(error){ alert('שגיאה בהוספת תלמיד 😢\n' + error.message); return; }
 
   nameInput.value = '';
+  await refreshStudentsCache();
   renderStudents();
   renderPasswords();
   renderStats();
-
-  // הודעה למורה
   alert('✅ ' + name + ' נוסף בהצלחה!\nהסיסמה: ' + password + '\n\nתעבירי לתלמיד את הסיסמה');
 }
 
-function deleteStudent(password){
-  students = loadStudents();
-  const name = students[password];
-  if(!confirm('למחוק את ' + name + '? הנקודות שלו יישארו במחשב.')) return;
-  delete students[password];
-  saveStudents(students);
+async function deleteStudent(password){
+  const name = students[password] || password;
+  if(!confirm('למחוק את ' + name + '? כל הנקודות שלו יימחקו.')) return;
+  const { error } = await db.from('students').delete().eq('password', password);
+  if(error){ alert('שגיאה במחיקה 😢'); return; }
+  await refreshStudentsCache();
   renderStudents();
   renderPasswords();
   renderStats();
-}
-
-function getStudentStats(password){
-  const c = parseInt(localStorage.getItem('wordup-' + password + '-correct') || '0');
-  const t = parseInt(localStorage.getItem('wordup-' + password + '-total') || '0');
-  const s = parseInt(localStorage.getItem('wordup-' + password + '-score') || '0');
-  return {correct: c, total: t, score: s, pct: t > 0 ? Math.round((c/t)*100) : 0};
 }
 
 function renderStudents(){
@@ -1033,7 +1035,7 @@ function normalize(str){
     .replace(/\s+/g, ' ');
 }
 
-function checkAnswer(){
+async function checkAnswer(){
   const userAnswer = document.getElementById('answer-input').value.trim();
   if(!userAnswer) return;
 
@@ -1050,15 +1052,13 @@ function checkAnswer(){
     showWrong();
   }
 
-  localStorage.setItem(userKey('score'), score);
-  localStorage.setItem(userKey('correct'), correctCount);
-  localStorage.setItem(userKey('total'), totalCount);
+  await saveUserStats();
   updateScoreDisplay();
 }
 
-function dontKnow(){
+async function dontKnow(){
   totalCount++;
-  localStorage.setItem(userKey('total'), totalCount);
+  await saveUserStats();
   updateScoreDisplay();
   showDontKnow();
 }
