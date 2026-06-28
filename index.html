@@ -228,7 +228,7 @@
   <div class="game-screen" id="game-screen" style="display:none">
     <div class="info-bar">
       <span class="level-badge" id="level-badge">קל</span>
-      <span class="stats"><span id="correct-count">0</span> נכון / <span id="total-count">0</span> שאלות</span>
+      <span class="stats"><span id="correct-count">0</span> נכון / <span id="total-count">0</span> שאלות <button onclick="resetSessionCount()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9CA3AF;margin-right:4px;padding:2px 4px;border-radius:4px" title="אפס ספירה">↺</button></span>
       <button class="change-level" onclick="backToMenu()">החלף רמה</button>
     </div>
 
@@ -1168,6 +1168,8 @@ function updateScoreDisplay(){
 
 function startGame(level){
   currentLevel = level;
+  correctCount = 0;
+  totalCount = 0;
   document.getElementById('diff-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
 
@@ -1177,6 +1179,13 @@ function startGame(level){
 
   updateScoreDisplay();
   pickRandomWord();
+}
+
+function resetSessionCount(){
+  if(!confirm('לאפס את הספירה של נכון/שאלות?')) return;
+  correctCount = 0;
+  totalCount = 0;
+  updateScoreDisplay();
 }
 
 function backToMenu(){
