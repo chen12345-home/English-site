@@ -1217,6 +1217,7 @@ function normalize(str){
 }
 
 async function checkAnswer(){
+  if(document.getElementById('modal-overlay').classList.contains('show')) return;
   const userAnswer = document.getElementById('answer-input').value.trim();
   if(!userAnswer) return;
 
@@ -1313,8 +1314,8 @@ function speak(){
 }
 
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape' && document.getElementById('modal-overlay').classList.contains('show')){
-    closeModal();
+  if(document.getElementById('modal-overlay').classList.contains('show')){
+    if(e.key === 'Escape' || e.key === 'Enter') closeModal();
   }
 });
 
