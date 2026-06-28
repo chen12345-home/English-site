@@ -173,7 +173,7 @@
     <h1>🎉 ברוכים הבאים לאתר של גיא</h1>
     <div class="subtitle">לימוד אנגלית בכיף 📚</div>
     <div class="user-pill" id="user-pill" style="display:none">👤 <span id="user-name"></span> <button class="logout-btn" onclick="logout()" title="התנתק">🚪</button></div>
-    <div class="score-pill" id="score-pill" style="display:none">⭐ <span id="score">0</span> נקודות</div>
+    <div class="score-pill" id="score-pill" style="display:none">⭐ <span id="score">0</span> נקודות <button onclick="resetScore()" style="background:none;border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.7);margin-right:4px;padding:2px 4px;border-radius:4px" title="אפס נקודות">↺</button></div>
   </div>
 
   <!-- Login screen -->
@@ -1185,6 +1185,15 @@ function resetSessionCount(){
   if(!confirm('לאפס את הספירה של נכון/שאלות?')) return;
   correctCount = 0;
   totalCount = 0;
+  updateScoreDisplay();
+}
+
+async function resetScore(){
+  if(!confirm('לאפס את כל הנקודות שלך ל-0?')) return;
+  score = 0;
+  correctCount = 0;
+  totalCount = 0;
+  await saveUserStats();
   updateScoreDisplay();
 }
 
