@@ -1234,6 +1234,18 @@ async function resetScore(){
 }
 
 let competitionMode = false;
+let compCorrect = 0;
+let compWeek = '';
+
+function getCurrentWeek(){
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return d.getUTCFullYear() + '-W' + weekNo;
+}
 
 function showCompetition(){
   document.getElementById('diff-screen').style.display = 'none';
@@ -1246,9 +1258,33 @@ function showDiffScreen(){
   document.getElementById('diff-screen').style.display = 'block';
 }
 
-function startCompetition(){
+async function startCompetition(){
+  const btn = document.querySelector('.competition-start-btn');
+  btn.textContent = '⏳ טוען...';
+  btn.disabled = true;
+
+  const thisWeek = getCurrentWeek();
+  try {
+    const { data } = await db.from('students')
+      .select('comp_correct, comp_week')
+      .eq('password', currentUserKey).single();
+
+    if(data && data.comp_week === thisWeek){
+      compCorrect = data.comp_correct || 0;
+    } else {
+      compCorrect = 0;
+      await db.from('students')
+        .update({ comp_correct: 0, comp_week: thisWeek })
+        .eq('password', currentUserKey);
+    }
+    compWeek = thisWeek;
+  } catch(e){ compCorrect = 0; compWeek = thisWeek; }
+
+  btn.textContent = '🚀 התחל';
+  btn.disabled = false;
+
   competitionMode = true;
-  correctCount = 0;
+  correctCount = compCorrect;
   totalCount = 0;
   document.getElementById('competition-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
@@ -1278,18 +1314,22 @@ async function renderLeaderboard(){
   const container = document.getElementById('leaderboard-content');
   container.innerHTML = '<div class="empty-state"><div class="icon">⏳</div><div>טוען...</div></div>';
   try {
-    const { data, error } = await db.from('students').select('name, correct, score').order('correct', { ascending: false });
+    const thisWeek = getCurrentWeek();
+    const { data, error } = await db.from('students').select('name, comp_correct, comp_week');
     if(error || !data || data.length === 0){
       container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>אין תלמידים עדיין</div></div>';
       return;
     }
-    container.innerHTML = data.map((s, i) => {
+    const sorted = data
+      .map(s => ({ name: s.name, count: s.comp_week === thisWeek ? (s.comp_correct || 0) : 0 }))
+      .sort((a, b) => b.count - a.count);
+    container.innerHTML = sorted.map((s, i) => {
       const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<span style="font-size:14px;font-weight:700;color:#6B6B6B">' + (i+1) + '</span>';
       const isMe = s.name === currentUser;
       return `<div class="lb-row ${isMe ? 'lb-me' : ''}">
         <div class="lb-rank">${rank}</div>
         <div class="lb-name">${isMe ? '⭐ ' : ''}${s.name}</div>
-        <div class="lb-score">${s.correct} מילים ✅</div>
+        <div class="lb-score">${s.count} מילים ✅</div>
       </div>`;
     }).join('');
   } catch(e) {
@@ -1334,12 +1374,16 @@ async function checkAnswer(){
   if(isCorrect){
     correctCount++;
     score += levelPoints[currentLevel];
+    if(competitionMode){
+      compCorrect++;
+      await db.from('students').update({ comp_correct: compCorrect, comp_week: compWeek }).eq('password', currentUserKey);
+    }
     showCorrect();
   } else {
     showWrong();
   }
 
-  await saveUserStats();
+  if(!competitionMode) await saveUserStats();
   updateScoreDisplay();
 }
 
