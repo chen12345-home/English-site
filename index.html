@@ -1413,7 +1413,7 @@ function speak(){
   if('speechSynthesis' in window){
     const u = new SpeechSynthesisUtterance(currentWord.en);
     u.lang = 'en-US';
-    u.rate = 0.85;
+    u.rate = 0.6;
     speechSynthesis.speak(u);
   }
 }
